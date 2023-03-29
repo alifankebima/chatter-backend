@@ -17,7 +17,7 @@ function sendMail(emailReceiver, token) {
         from: process.env.NODEMAILER_EMAIL_ADDRESS,
         to: emailReceiver,
         subject: "Example App Activation Link",
-        html: `<b>${process.env.FRONTEND_URL}/user/verify?token=${token}</b>`,
+        html: `<b>${process.env.NODEMAILER_FRONTEND_URL}${token}</b>`,
     });
     return;
 }

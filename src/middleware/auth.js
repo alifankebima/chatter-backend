@@ -7,7 +7,7 @@ const verifyToken = async (req, res, next) => {
     let token;
     if (req.headers.authorization) {
       token = req.headers.authorization.split(" ")[1];
-      let decoded = await jwt.verify(token, process.env.SECRET_KEY_JWT);
+      let decoded = await jwt.verify(token, process.env.JWT_SECRETKEY);
       req.payload = decoded;
       next();
     } else {
