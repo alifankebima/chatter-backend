@@ -51,7 +51,7 @@ const uploadImage = async (imageFile) => {
     return response.data;
 }
 
-const deleteImage = async (imageId) =>   {
+const deleteImage = async (imageId) => {
     const response = await driveService.files.delete({
         // Require image id to be deleted
         fileId: imageId,

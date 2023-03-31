@@ -39,14 +39,17 @@ const getAllPrivateMessages = async (req, res) => {
     }
 }
 
-const getUserPrivateMessages = async (req, res) => {
+const getReceiverPrivateMessages = async (req, res) => {
     try {
         // Get request id sender, id receiver, and pagination query
-        const id_sender = req.body.id_sender;
-        const id_receiver = req.payload.id;
+        const id_sender = req.payload.id;
+        const id_receiver = req.params.id_receiver;
         const limit = Number(req.query.limit) || 10;
         const page = Number(req.query.page) || 1;
         const offset = (page - 1) * limit;
+
+        console.log(id_sender);
+        console.log(id_receiver);
 
         // Check if requested data exists
         if (!id_sender) return commonHelper.response(res, null, 400,
@@ -82,15 +85,16 @@ const createPrivateMessage = async (req, res) => {
     try {
         // Get request private data and group title
         const data = req.body;
+        data.receiver = req.params.id_receiver;
         const id_user = req.payload.id;
 
         // Check if requested data exists
-        if (!data.id_receiver || !data.message) return commonHelper
+        if (!data.receiver || !data.message) return commonHelper
             .response(res, null, 400, "Client must provide id receiver and message");
 
         // Check if receiver exists in database
-        const userResult = await userModel.findId(data.id_receiver);
-        if (!userResult.rowCount) return commonHelper.response(res, 404, null,
+        const userResult = await userModel.findId(data.receiver);
+        if (!userResult.rowCount) return commonHelper.response(res, null, 404,
             "User not found");
 
         // Insert private message to database
@@ -102,10 +106,10 @@ const createPrivateMessage = async (req, res) => {
         const result = await privateMessageModel.insertPrivateMessage(data);
 
         // Response
-        commonHelper.response(res, result, 201, "Private message added");
+        commonHelper.response(res, result.rows, 201, "Private message sent");
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed adding private message");
+        commonHelper.response(res, null, 500, "Failed sending private message");
     }
 }
 
@@ -120,7 +124,7 @@ const updatePrivatepMessage = async (req, res) => {
         const privateMessageResult = await privateMessageModel
             .selectPrivateMessage(id)
         if (!privateMessageResult.rowCount) return commonHelper
-            .response(res, 404, null, "Private message not found");
+            .response(res, null, 404, "Private message not found");
 
         // Check if private message is created by user logged in
         if (privateMessageResult.rows[0].sender != id_user)
@@ -155,7 +159,7 @@ const softDeletePrivateMessage = async (req, res) => {
         const privateMessageResult = await privateMessageModel
             .selectPrivateMessage(id)
         if (!privateMessageResult.rowCount) return commonHelper
-            .response(res, 404, null, "Private message not found");
+            .response(res, null, 404, "Private message not found");
 
         // Check if private message is created by user logged in
         if (privateMessageResult.rows[0].sender != id_user)
@@ -176,9 +180,9 @@ const softDeletePrivateMessage = async (req, res) => {
 }
 
 module.exports = {
-getAllPrivateMessages,
-getUserPrivateMessages,
-createPrivateMessage,
-updatePrivatepMessage,
-softDeletePrivateMessage
+    getAllPrivateMessages,
+    getReceiverPrivateMessages,
+    createPrivateMessage,
+    updatePrivatepMessage,
+    softDeletePrivateMessage
 }

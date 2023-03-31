@@ -13,7 +13,7 @@ const selectUser = (id) => {
 }
 
 const insertUser = (data) => {
-    const { id, fullname, username, email, password, created_at, 
+    const { id, fullname, username, email, password, created_at,
         updated_at } = data;
     return pool.query(`INSERT INTO users(id, fullname, username, email, 
         password, created_at, updated_at) VALUES('${id}', '${fullname}', 
@@ -22,7 +22,7 @@ const insertUser = (data) => {
 }
 
 const updateUser = (data) => {
-    const { id, fullname, username, password, image, 
+    const { id, fullname, username, password, image,
         phone_number, updated_at } = data;
     return pool.query(`UPDATE users SET 
         ${fullname ? "fullname='" + fullname + "', " : ""}

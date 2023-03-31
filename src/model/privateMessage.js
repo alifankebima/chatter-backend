@@ -7,9 +7,9 @@ const selectAllPrivateMessages = (searchParam, sortBy, sort, limit, offset) => {
 }
 
 const selectUserPrivateMessages = (sender, receiver, limit, offset) => {
-    return pool.query(`SELECT * FROM private_messages WHERE (sender='${sender}' 
-        AND receiver='${receiver}') OR (sender='${receiver}' AND 
-        receiver='${sender}') ORDER BY created_at desc LIMIT ${limit} 
+    return pool.query(`SELECT * FROM private_messages WHERE sender='${sender}' 
+        OR receiver='${receiver}' AND sender='${receiver}' OR 
+        receiver='${sender}' ORDER BY created_at desc LIMIT ${limit} 
         OFFSET ${offset}`);
 }
 

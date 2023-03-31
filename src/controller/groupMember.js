@@ -70,7 +70,7 @@ const createGroupMember = async (req, res) => {
         const id_user = req.payload.id;
 
         // Check if requested data exists
-        if(!data.id_group) return commonHelper
+        if (!data.id_group) return commonHelper
             .response(res, null, 400, "Client must provide id group");
 
         // Check if group exists
@@ -81,9 +81,9 @@ const createGroupMember = async (req, res) => {
         // Check if user already joined group
         const groupMemberResult = await groupMemberModel
             .findGroupMember(data.id_group, id_user);
-        if(groupMemberResult.rowCount) return commonHelper
+        if (groupMemberResult.rowCount) return commonHelper
             .response(res, null, 403, "User already joined group");
-        
+
         // Insert group member to database
         data.id = uuidv4();
         data.id_user = id_user;
@@ -117,7 +117,7 @@ const softDeleteGroupMember = async (req, res) => {
             .findGroupMember(id_group, id_user)
         if (!groupMemberResult.rowCount) return commonHelper
             .response(res, null, 403, "User haven't joined or already leaved group");
-        
+
         // Soft delete user from group member
         const deleted_at = new Date(Date.now()).toISOString();
         const result = await groupMemberModel
