@@ -1,31 +1,28 @@
 const { v4: uuidv4 } = require('uuid');
-const { uploadPhoto, updatePhoto, deletePhoto } = require('../config/googleDrive.config.js');
+const commonHelper = require('../helper/common');
+const groupModel = require('../model/group');
+const groupMemberModel = require('../model/groupMember');
 
-const commonHelper = require('../helper/common.js');
-const userModel = require('../model/user.js');
 
-
-const getAllUsers = async (req, res) => {
+const getAllGroupMembers = async (req, res) => {
     try {
-        //Search and pagination query
-        const searchParam = req.query.search || '';
-        const sortBy = req.query.sortBy || 'updated_at';
+        //Pagination query
+        const sortBy = req.query.sortBy || 'created_at';
         const sort = req.query.sort || 'desc';
-        const limit = Number(req.query.limit) || 6;
+        const limit = Number(req.query.limit) || 10;
         const page = Number(req.query.page) || 1;
         const offset = (page - 1) * limit;
 
-        //Get all users from database
-        const results = await userModel
-            .selectAllUsers(searchParam, sortBy, sort, limit, offset);
+        //Get all group members from database
+        const results = await groupMemberModel
+            .selectAllGroupMembers(sortBy, sort, limit, offset);
 
-        //Return not found if there's no user in database
-        if (!results.rows[0]) return commonHelper
-            .response(res, null, 404, "Users not found");
+        //Return not found if there's no group members in database
+        if (!results.rowCount) return commonHelper
+            .response(res, null, 404, "Group member not found");
 
         //Pagination info
-        const { rows: [count] } = await userModel.countData();
-        const totalData = Number(count.count);
+        const totalData = results.rowCount;
         const totalPage = Math.ceil(totalData / limit);
         const pagination = { currentPage: page, limit, totalData, totalPage };
 
@@ -35,161 +32,108 @@ const getAllUsers = async (req, res) => {
 
         //Response
         commonHelper.response(res, results.rows, 200,
-            "Get all users successful", pagination);
+            "Get all group members successful", pagination);
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed getting users");
+        commonHelper.response(res, null, 500, "Failed getting all group members");
     }
 }
 
-const getDetailUser = async (req, res) => {
+const getGroupMembers = async (req, res) => {
     try {
-        //Get request user id
-        const id = req.params.id;
+        //Get request group id
+        const id_group = req.params.id_group;
 
-        //Get user by id from database
-        const result = await userModel.selectUser(id);
+        //Get all group members from database
+        const results = await groupMemberModel.selectGroupMembers(id_group);
 
-        //Return not found if there's no user in database
-        if (!result.rowCount) return commonHelper
-            .response(res, null, 404, "User not found");
-
-        //Get user videos from database
-        const resultVideos = await videoModel.selectUserVideos(id);
-        result.rows[0].videos = resultVideos.rows;
-
-        //Get user comments from database
-        const resultComments = await commentModel.selectUserComments(id);
-        result.rows[0].comments = resultComments.rows;
+        //Return not found if there's no group members in database
+        if (!results.rowCount) return commonHelper
+            .response(res, null, 404, "Group members not found");
 
         //Response
-        //Both user videos and comments will return empty array
-        //If there's no user videos or comments in database
-        commonHelper.response(res, result.rows, 200,
-            "Get detail user successful");
+        commonHelper.response(res, results.rows, 200,
+            "Get group members successful");
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed getting detail user");
+        commonHelper.response(res, null, 500, "Failed getting all group members");
     }
 }
 
-const createUser = async (req, res) => {
+// This controller adds logged in user to specified group
+// Instead of inviting other user to group
+const createGroupMember = async (req, res) => {
     try {
-        //Get request user data and user title
-        const data = req.body;
-        const title = data.title;
-
-        //Check if user title already exists
-        const userTitleResult = await userModel.selectUserTitle(title);
-        if (userTitleResult.rowCount > 0) return commonHelper
-            .response(res, null, 403, "User title already exists");
-
-        //Get user photo
-        if (req.file == undefined) return commonHelper
-            .response(res, null, 400, "Please input photo");
-        // const HOST = process.env.RAILWAY_STATIC_URL;
-        // data.photo = `http://${HOST}/img/${req.file.filename}`;
-        const uploadResult = await uploadPhoto(req.file)
-        const parentPath = process.env.GOOGLE_DRIVE_PHOTO_PATH;
-        data.photo = parentPath.concat(uploadResult.id)
-
-        //Insert user to database
-        data.id = uuidv4();
-        data.id_user = req.payload.id;
-        data.created_at = Date.now();
-        data.updated_at = Date.now();
-        const result = await userModel.insertUser(data);
-
-        //Response
-        commonHelper.response(res, [{ id: data.id }], 201, "User added");
-    } catch (error) {
-        console.log(error);
-        commonHelper.response(res, null, 500, "Failed adding user");
-    }
-}
-
-const updateUser = async (req, res) => {
-    try {
-        //Get request user id, user id, and user data
-        const id = req.params.id;
-        const id_user = req.payload.id;
-        const data = req.body;
-
-        //Check if user exists in database
-        const userResult = await userModel.selectUser(id);
-        if (!userResult.rowCount)
-            return commonHelper.response(res, null, 404, "User not found");
-
-        //Check if user is created by user logged in
-        if (userResult.rows[0].id_user != id_user)
-            return commonHelper.response(res, null, 403,
-                "Updating user created by other user is not allowed");
-
-
-        try {
-            const oldPhoto = userResult.rows[0].photo;
-            const oldPhotoId = oldPhoto.split("=")[1];
-            const updateResult = await updatePhoto(req.file, oldPhotoId)
-            const parentPath = process.env.GOOGLE_DRIVE_PHOTO_PATH;
-            data.photo = parentPath.concat(updateResult.id)
-        }
-        catch (err) {
-            data.photo = userResult.rows[0].photo
-        }
-        //Get user photo
-        // if (req.file == undefined) return commonHelper
-        //     .response(res, null, 400, "Please input photo");
-
-        //Update user in database
-        data.id = id;
-        data.updated_at = Date.now();
-        const result = await userModel.updateUser(data);
-
-        //Response
-        commonHelper.response(res, [{ id: data.id }], 201, "User updated");
-    } catch (error) {
-        console.log(error);
-        commonHelper.response(res, null, 500, "Failed updating user");
-    }
-}
-
-const deleteUser = async (req, res) => {
-    try {
-        //Get request user id
-        const id = req.params.id;
+        // Get request group member data
+        const data = {};
+        data.id_group = req.params.id_group;
         const id_user = req.payload.id;
 
-        //Check if user exists in database
-        const userResult = await userModel.selectUser(id);
-        if (!userResult.rowCount)
-            return commonHelper.response(res, null, 404,
-                "User not found or already deleted");
+        // Check if requested data exists
+        if(!data.id_group) return commonHelper
+            .response(res, null, 400, "Client must provide id group");
 
-        //Check if user is created by user logged in
-        if (userResult.rows[0].id_user != id_user)
-            return commonHelper.response(res, null, 403,
-                "Deleting user created by other user is not allowed");
+        // Check if group exists
+        const groupResult = await groupModel.findId(data.id_group);
+        if (!groupResult.rowCount) return commonHelper.response(res, null, 404,
+            "Group not found")
 
+        // Check if user already joined group
+        const groupMemberResult = await groupMemberModel
+            .findGroupMember(data.id_group, id_user);
+        if(groupMemberResult.rowCount) return commonHelper
+            .response(res, null, 403, "User already joined group");
         
-        //Delete user
-        const result = await userModel.deleteUser(id);
-
-        const oldPhoto = userResult.rows[0].photo;
-        const oldPhotoId = oldPhoto.split("=")[1];
-        await deletePhoto(oldPhotoId)
+        // Insert group member to database
+        data.id = uuidv4();
+        data.id_user = id_user;
+        data.created_at = new Date(Date.now()).toISOString();
+        const result = await groupMemberModel.insertGroupMember(data);
 
         //Response
-        commonHelper.response(res, result.rows, 200, "User deleted");
+        commonHelper.response(res, result.rows, 201, "User joined group");
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed deleting user");
+        commonHelper.response(res, null, 500, "Failed user joining group");
+    }
+}
+
+// This controller removes logged in user from specified group
+// Instead of removing other user by group owner
+const softDeleteGroupMember = async (req, res) => {
+    try {
+        // Get request user id
+        const id_group = req.params.id_group;
+        const id_user = req.payload.id;
+
+        // Check if group exists
+        const groupResult = await groupModel.findId(id_group);
+        console.log(id_group)
+        if (!groupResult.rowCount) return commonHelper.response(res, null, 404,
+            "Group not found");
+
+        // Check if user have joined group
+        const groupMemberResult = await groupMemberModel
+            .findGroupMember(id_group, id_user)
+        if (!groupMemberResult.rowCount) return commonHelper
+            .response(res, null, 403, "User haven't joined or already leaved group");
+        
+        // Soft delete user from group member
+        const deleted_at = new Date(Date.now()).toISOString();
+        const result = await groupMemberModel
+            .softDeleteGroupMember(id_group, id_user, deleted_at)
+
+        //Response
+        commonHelper.response(res, result.rows, 200, "User leaved group");
+    } catch (error) {
+        console.log(error);
+        commonHelper.response(res, null, 500, "Failed user leaving group");
     }
 }
 
 module.exports = {
-    getAllUsers,
-    getDetailUser,
-    createUser,
-    updateUser,
-    deleteUser
+    getAllGroupMembers,
+    getGroupMembers,
+    createGroupMember,
+    softDeleteGroupMember
 }

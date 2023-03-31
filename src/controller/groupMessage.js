@@ -1,195 +1,181 @@
 const { v4: uuidv4 } = require('uuid');
-const { uploadPhoto, updatePhoto, deletePhoto } = require('../config/googleDrive.config.js');
+const commonHelper = require('../helper/common');
+const groupModel = require('../model/group');
+const groupMessageModel = require('../model/groupMessage');
 
-const commonHelper = require('../helper/common.js');
-const userModel = require('../model/user.js');
-
-
-const getAllUsers = async (req, res) => {
+const getAllGroupMessages = async (req, res) => {
     try {
-        //Search and pagination query
+        // Search and pagination query
         const searchParam = req.query.search || '';
-        const sortBy = req.query.sortBy || 'updated_at';
+        const sortBy = req.query.sortBy || 'created_at';
         const sort = req.query.sort || 'desc';
-        const limit = Number(req.query.limit) || 6;
+        const limit = Number(req.query.limit) || 10;
         const page = Number(req.query.page) || 1;
         const offset = (page - 1) * limit;
 
-        //Get all users from database
-        const results = await userModel
-            .selectAllUsers(searchParam, sortBy, sort, limit, offset);
+        // Get all group messages from database
+        const results = await groupMessageModel
+            .selectAllGroupMessages(searchParam, sortBy, sort, limit, offset);
 
-        //Return not found if there's no user in database
-        if (!results.rows[0]) return commonHelper
-            .response(res, null, 404, "Users not found");
+        // Return not found if there's no group messages in database
+        if (!results.rowCount) return commonHelper
+            .response(res, null, 404, "Group message not found");
 
-        //Pagination info
-        const { rows: [count] } = await userModel.countData();
-        const totalData = Number(count.count);
+        // Pagination info
+        const totalData = results.rowCount;
         const totalPage = Math.ceil(totalData / limit);
         const pagination = { currentPage: page, limit, totalData, totalPage };
 
-        //Return if page params more than total page
+        // Return page invalid if page params is more than total page
         if (page > totalPage) return commonHelper
             .response(res, null, 404, "Page invalid", pagination);
 
-        //Response
+        // Response
         commonHelper.response(res, results.rows, 200,
-            "Get all users successful", pagination);
+            "Get all group messages successful", pagination);
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed getting users");
+        commonHelper.response(res, null, 500, "Failed getting all group messages");
     }
 }
 
-const getDetailUser = async (req, res) => {
+const getGroupMessages = async (req, res) => {
     try {
-        //Get request user id
-        const id = req.params.id;
+        // Search and pagination query
+        const id_group = req.params.id_group;
+        const searchParam = req.query.search || '';
+        const sortBy = req.query.sortBy || 'created_at';
+        const sort = req.query.sort || 'desc';
+        const limit = Number(req.query.limit) || 10;
+        const page = Number(req.query.page) || 1;
+        const offset = (page - 1) * limit;
 
-        //Get user by id from database
-        const result = await userModel.selectUser(id);
+        // Get group messages from database
+        const results = await groupMessageModel.selectGroupMessages(id_group,
+            searchParam, sortBy, sort, limit, offset);
 
-        //Return not found if there's no user in database
-        if (!result.rowCount) return commonHelper
-            .response(res, null, 404, "User not found");
+        // Return not found if there's no group messages in database
+        if (!results.rowCount) return commonHelper
+            .response(res, null, 404, "Group message not found");
 
-        //Get user videos from database
-        const resultVideos = await videoModel.selectUserVideos(id);
-        result.rows[0].videos = resultVideos.rows;
+        // Pagination info
+        const totalData = results.rowCount;
+        const totalPage = Math.ceil(totalData / limit);
+        const pagination = { currentPage: page, limit, totalData, totalPage };
 
-        //Get user comments from database
-        const resultComments = await commentModel.selectUserComments(id);
-        result.rows[0].comments = resultComments.rows;
+        // Return page invalid if page params is more than total page
+        if (page > totalPage) return commonHelper
+            .response(res, null, 404, "Page invalid", pagination);
 
-        //Response
-        //Both user videos and comments will return empty array
-        //If there's no user videos or comments in database
-        commonHelper.response(res, result.rows, 200,
-            "Get detail user successful");
+        // Response
+        commonHelper.response(res, results.rows, 200,
+            "Get group messages successful", pagination);
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed getting detail user");
+        commonHelper.response(res, null, 500, "Failed getting group messages");
     }
 }
 
-const createUser = async (req, res) => {
+const createGroupMessage = async (req, res) => {
     try {
-        //Get request user data and user title
+        // Get request group data and group title
+        const id_group = req.params.id_group;
         const data = req.body;
-        const title = data.title;
+        const id_user = req.payload.id;
 
-        //Check if user title already exists
-        const userTitleResult = await userModel.selectUserTitle(title);
-        if (userTitleResult.rowCount > 0) return commonHelper
-            .response(res, null, 403, "User title already exists");
+        // Check if requested data exists
+        if (!id_group || !data.message) return commonHelper
+            .response(res, null, 400, "Client must provide id group and message");
 
-        //Get user photo
-        if (req.file == undefined) return commonHelper
-            .response(res, null, 400, "Please input photo");
-        // const HOST = process.env.RAILWAY_STATIC_URL;
-        // data.photo = `http://${HOST}/img/${req.file.filename}`;
-        const uploadResult = await uploadPhoto(req.file)
-        const parentPath = process.env.GOOGLE_DRIVE_PHOTO_PATH;
-        data.photo = parentPath.concat(uploadResult.id)
+        // Check if group exists in database
+        const groupResult = await groupModel.findId(id_group);
+        if (!groupResult.rowCount) return commonHelper.response(res, null, 404,
+            "Group not found");
 
-        //Insert user to database
+        // Insert group message to database
         data.id = uuidv4();
-        data.id_user = req.payload.id;
-        data.created_at = Date.now();
-        data.updated_at = Date.now();
-        const result = await userModel.insertUser(data);
+        data.id_group = id_group;
+        data.sender = id_user;
+        data.message_type = "text";
+        data.created_at = new Date(Date.now()).toISOString();
+        data.updated_at = data.created_at;
+        const result = await groupMessageModel.insertGroupMessage(data)
 
-        //Response
-        commonHelper.response(res, [{ id: data.id }], 201, "User added");
+        // Response
+        commonHelper.response(res, result.rows, 201, "Group message added");
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed adding user");
+        commonHelper.response(res, null, 500, "Failed adding group message");
     }
 }
 
-const updateUser = async (req, res) => {
+const updateGroupMessage = async (req, res) => {
     try {
-        //Get request user id, user id, and user data
+        // Get request group id and data
         const id = req.params.id;
         const id_user = req.payload.id;
         const data = req.body;
 
-        //Check if user exists in database
-        const userResult = await userModel.selectUser(id);
-        if (!userResult.rowCount)
-            return commonHelper.response(res, null, 404, "User not found");
+        // Check if group message exists in database
+        const groupMessageResult = await groupMessageModel.selectGroupMessage(id);
+        if (!groupMessageResult.rowCount) return commonHelper
+            .response(res, null, 404, "Group message not found");
 
-        //Check if user is created by user logged in
-        if (userResult.rows[0].id_user != id_user)
+        // Check if group message is created by user logged in
+        if (groupMessageResult.rows[0].sender != id_user)
             return commonHelper.response(res, null, 403,
-                "Updating user created by other user is not allowed");
+                "Updating group message created by other user is not allowed");
 
+        // Check if group message type is text
+        if (groupMessageResult.rows[0].message_type != "text")
+            return commonHelper.response(res, null, 403,
+                "Updating message type other than text is not allowed");
 
-        try {
-            const oldPhoto = userResult.rows[0].photo;
-            const oldPhotoId = oldPhoto.split("=")[1];
-            const updateResult = await updatePhoto(req.file, oldPhotoId)
-            const parentPath = process.env.GOOGLE_DRIVE_PHOTO_PATH;
-            data.photo = parentPath.concat(updateResult.id)
-        }
-        catch (err) {
-            data.photo = userResult.rows[0].photo
-        }
-        //Get user photo
-        // if (req.file == undefined) return commonHelper
-        //     .response(res, null, 400, "Please input photo");
-
-        //Update user in database
+        // Update group message in database
         data.id = id;
-        data.updated_at = Date.now();
-        const result = await userModel.updateUser(data);
+        data.updated_at = new Date(Date.now()).toISOString();
+        const result = await groupMessageModel.updateGroupMessage(data);
 
         //Response
-        commonHelper.response(res, [{ id: data.id }], 201, "User updated");
+        commonHelper.response(res, result.rows, 201, "Group message updated");
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed updating user");
+        commonHelper.response(res, null, 500, "Failed updating group message");
     }
 }
 
-const deleteUser = async (req, res) => {
+const softDeleteGroupMessage = async (req, res) => {
     try {
-        //Get request user id
+        // Get request group id and data
         const id = req.params.id;
         const id_user = req.payload.id;
 
-        //Check if user exists in database
-        const userResult = await userModel.selectUser(id);
-        if (!userResult.rowCount)
-            return commonHelper.response(res, null, 404,
-                "User not found or already deleted");
+        // Check if group message exists in database
+        const groupMessageResult = await groupMessageModel.selectGroupMessage(id);
+        if (!groupMessageResult.rowCount) return commonHelper
+            .response(res, null, 404, "Group message not found");
 
-        //Check if user is created by user logged in
-        if (userResult.rows[0].id_user != id_user)
+        // Check if group message is created by user logged in
+        if (groupMessageResult.rows[0].sender != id_user)
             return commonHelper.response(res, null, 403,
-                "Deleting user created by other user is not allowed");
+                "Deleting group message created by other user is not allowed");
 
-        
-        //Delete user
-        const result = await userModel.deleteUser(id);
-
-        const oldPhoto = userResult.rows[0].photo;
-        const oldPhotoId = oldPhoto.split("=")[1];
-        await deletePhoto(oldPhotoId)
+        // Delete group message in database
+        const deleted_at = new Date(Date.now()).toISOString();
+        const result = await groupMessageModel.softDeleteGroupMessage(id, deleted_at)
 
         //Response
-        commonHelper.response(res, result.rows, 200, "User deleted");
+        commonHelper.response(res, result.rows, 200, "Group message deleted");
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed deleting user");
+        commonHelper.response(res, null, 500, "Failed deleting group message");
     }
 }
 
 module.exports = {
-    getAllUsers,
-    getDetailUser,
-    createUser,
-    updateUser,
-    deleteUser
+    getAllGroupMessages,
+    getGroupMessages,
+    createGroupMessage,
+    updateGroupMessage,
+    softDeleteGroupMessage
 }

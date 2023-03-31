@@ -1,21 +1,16 @@
 const pool = require('../config/db');
 
 const selectAllPrivateMessages = (searchParam, sortBy, sort, limit, offset) => {
-    return pool.query(`SELECT * FROM private_messages WHERE sender ILIKE 
+    return pool.query(`SELECT * FROM private_messages WHERE message ILIKE 
         '%${searchParam}%' ORDER BY ${sortBy} ${sort} LIMIT ${limit} OFFSET 
         ${offset}`);
 }
 
-const selectSenderPrivateMessages = (searchParam, sender, sortBy, sort, limit, offset) => {
-    return pool.query(`SELECT * FROM private_messages WHERE message ILIKE 
-        '%${searchParam}%' AND sender='${sender}' ORDER BY ${sortBy} ${sort} 
-        LIMIT ${limit} OFFSET ${offset}`);
-}
-
-const selectReceiverPrivateMessages = (searchParam, receiver, sortBy, sort, limit, offset) => {
-    return pool.query(`SELECT * FROM private_messages WHERE message ILIKE 
-        '%${searchParam}%' AND receiver='${receiver}' ORDER BY ${sortBy} 
-        ${sort} LIMIT ${limit} OFFSET ${offset}`);
+const selectUserPrivateMessages = (sender, receiver, limit, offset) => {
+    return pool.query(`SELECT * FROM private_messages WHERE (sender='${sender}' 
+        AND receiver='${receiver}') OR (sender='${receiver}' AND 
+        receiver='${sender}') ORDER BY created_at desc LIMIT ${limit} 
+        OFFSET ${offset}`);
 }
 
 const selectPrivateMessage = (id) => {
@@ -33,7 +28,7 @@ const insertPrivateMessage = (data) => {
 const updatePrivateMessage = (data) => {
     const { id, message, updated_at } = data;
     return pool.query(`UPDATE private_messages SET message='${message}', 
-        '${updated_at}' WHERE id='${id}'`);
+        updated_at='${updated_at}' WHERE id='${id}'`);
 }
 
 const softDeletePrivateMessage = (id, deleted_at) => {
@@ -49,8 +44,7 @@ const findId = (id) => {
 
 module.exports = {
     selectAllPrivateMessages,
-    selectSenderPrivateMessages,
-    selectReceiverPrivateMessages,
+    selectUserPrivateMessages,
     selectPrivateMessage,
     insertPrivateMessage,
     updatePrivateMessage,

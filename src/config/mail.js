@@ -16,7 +16,7 @@ function sendMail(emailReceiver, token) {
     configMail.sendMail({
         from: process.env.NODEMAILER_EMAIL_ADDRESS,
         to: emailReceiver,
-        subject: "Example App Activation Link",
+        subject: "Chatter App Activation Link",
         html: `<b>${process.env.NODEMAILER_FRONTEND_URL}${token}</b>`,
     });
     return;

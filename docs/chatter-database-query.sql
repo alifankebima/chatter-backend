@@ -21,7 +21,7 @@ create table users(
     username varchar(40) not null unique,
     email varchar(60) not null unique,
     password varchar(128) not null,
-    image varchar default('user.png'),
+    image varchar,
     phone_number varchar(16),
     email_verified boolean default(false),
     created_at timestamptz,
@@ -47,7 +47,7 @@ create table groups(
     id_owner varchar(36) references users on update cascade on delete cascade,
     foreign key (id_owner) references users(id),
     name varchar(40) not null,
-    image varchar default('group.png'),
+    image varchar,
     created_at timestamptz,
     updated_at timestamptz,
     deleted_at timestamptz

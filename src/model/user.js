@@ -2,7 +2,7 @@ const pool = require('../config/db');
 
 const selectAllUsers = (searchParam, sortBy, sort, limit, offset) => {
     return pool.query(`SELECT * FROM users WHERE username ILIKE 
-        '%${searchParam}%' AND deleted_at IS not null ORDER BY ${sortBy} 
+        '%${searchParam}%' AND deleted_at IS null ORDER BY ${sortBy} 
         ${sort} LIMIT ${limit} OFFSET ${offset}`);
 }
 
@@ -13,28 +13,24 @@ const selectUser = (id) => {
 }
 
 const insertUser = (data) => {
-    const { id, fullname, username, email, password, created_at } = data;
+    const { id, fullname, username, email, password, created_at, 
+        updated_at } = data;
     return pool.query(`INSERT INTO users(id, fullname, username, email, 
-        password, created_at) VALUES('${id}', '${fullname}', '${username}', 
-        '${email}', '${password}', '${created_at}')`);
+        password, created_at, updated_at) VALUES('${id}', '${fullname}', 
+        '${username}', '${email}', '${password}', '${created_at}',
+        '${updated_at}')`);
 }
 
 const updateUser = (data) => {
-    const { id, fullname, username, email, password, image, 
+    const { id, fullname, username, password, image, 
         phone_number, updated_at } = data;
     return pool.query(`UPDATE users SET 
         ${fullname ? "fullname='" + fullname + "', " : ""}
         ${username ? "username='" + username + "', " : ""}
-        ${email ? "email='" + email + "', " : ""}
         ${password ? "password='" + password + "', " : ""}
         ${image ? "image='" + image + "', " : ""}
         ${phone_number ? "phone_number='" + phone_number + "', " : ""}
-        '${updated_at}' WHERE id='${id}'`);
-}
-
-const softDeleteUser = (id, deleted_at) => {
-    return pool.query(`UPDATE users SET deleted_at='${deleted_at}' 
-        WHERE id='${id}'`);
+        updated_at='${updated_at}' WHERE id='${id}'`);
 }
 
 const deleteUser = (id) => {
@@ -70,19 +66,11 @@ const findUsername = (username) => {
             (error, result) => (!error) ? resolve(result) : reject(error)));
 }
 
-const findUserDeleted = (id) => {
-    return new Promise((resolve, reject) =>
-        pool.query(`SELECT username FROM users WHERE id='${id}' 
-            AND deleted_at IS not null`,
-            (error, result) => (!error) ? resolve(result) : reject(error)));
-}
-
 module.exports = {
     selectAllUsers,
     selectUser,
     insertUser,
     updateUser,
-    softDeleteUser,
     deleteUser,
     verifyEmail,
     findId,

@@ -1,195 +1,184 @@
 const { v4: uuidv4 } = require('uuid');
-const { uploadPhoto, updatePhoto, deletePhoto } = require('../config/googleDrive.config.js');
+const commonHelper = require('../helper/common');
+const userModel = require('../model/user');
+const privateMessageModel = require('../model/privateMessage');
 
-const commonHelper = require('../helper/common.js');
-const userModel = require('../model/user.js');
-
-
-const getAllUsers = async (req, res) => {
+const getAllPrivateMessages = async (req, res) => {
     try {
-        //Search and pagination query
+        // Search and pagination query
         const searchParam = req.query.search || '';
-        const sortBy = req.query.sortBy || 'updated_at';
+        const sortBy = req.query.sortBy || 'created_at';
         const sort = req.query.sort || 'desc';
-        const limit = Number(req.query.limit) || 6;
+        const limit = Number(req.query.limit) || 10;
         const page = Number(req.query.page) || 1;
         const offset = (page - 1) * limit;
 
-        //Get all users from database
-        const results = await userModel
-            .selectAllUsers(searchParam, sortBy, sort, limit, offset);
+        // Get all private messages from database
+        const results = await privateMessageModel
+            .selectAllPrivateMessages(searchParam, sortBy, sort, limit, offset);
 
-        //Return not found if there's no user in database
-        if (!results.rows[0]) return commonHelper
-            .response(res, null, 404, "Users not found");
+        // Return not found if there's no group messages in database
+        if (!results.rowCount) return commonHelper
+            .response(res, null, 404, "Private message not found");
 
-        //Pagination info
-        const { rows: [count] } = await userModel.countData();
-        const totalData = Number(count.count);
+        // Pagination info
+        const totalData = results.rowCount;
         const totalPage = Math.ceil(totalData / limit);
         const pagination = { currentPage: page, limit, totalData, totalPage };
 
-        //Return if page params more than total page
+        // Return page invalid if page params is more than total page
         if (page > totalPage) return commonHelper
             .response(res, null, 404, "Page invalid", pagination);
 
-        //Response
+        // Response
         commonHelper.response(res, results.rows, 200,
-            "Get all users successful", pagination);
+            "Get all private messages successful", pagination);
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed getting users");
+        commonHelper.response(res, null, 500, "Failed getting all private messages");
     }
 }
 
-const getDetailUser = async (req, res) => {
+const getUserPrivateMessages = async (req, res) => {
     try {
-        //Get request user id
-        const id = req.params.id;
+        // Get request id sender, id receiver, and pagination query
+        const id_sender = req.body.id_sender;
+        const id_receiver = req.payload.id;
+        const limit = Number(req.query.limit) || 10;
+        const page = Number(req.query.page) || 1;
+        const offset = (page - 1) * limit;
 
-        //Get user by id from database
-        const result = await userModel.selectUser(id);
+        // Check if requested data exists
+        if (!id_sender) return commonHelper.response(res, null, 400,
+            "Client must provide id sender")
 
-        //Return not found if there's no user in database
-        if (!result.rowCount) return commonHelper
-            .response(res, null, 404, "User not found");
+        // Get private messages from database
+        const results = await privateMessageModel
+            .selectUserPrivateMessages(id_sender, id_receiver, limit, offset)
 
-        //Get user videos from database
-        const resultVideos = await videoModel.selectUserVideos(id);
-        result.rows[0].videos = resultVideos.rows;
+        // Return not found if there's no group messages in database
+        if (!results.rowCount) return commonHelper
+            .response(res, null, 404, "Private message not found");
 
-        //Get user comments from database
-        const resultComments = await commentModel.selectUserComments(id);
-        result.rows[0].comments = resultComments.rows;
+        // Pagination info
+        const totalData = results.rowCount;
+        const totalPage = Math.ceil(totalData / limit);
+        const pagination = { currentPage: page, limit, totalData, totalPage };
 
-        //Response
-        //Both user videos and comments will return empty array
-        //If there's no user videos or comments in database
-        commonHelper.response(res, result.rows, 200,
-            "Get detail user successful");
+        // Return page invalid if page params is more than total page
+        if (page > totalPage) return commonHelper
+            .response(res, null, 404, "Page invalid", pagination);
+
+        // Response
+        commonHelper.response(res, results.rows, 200,
+            "Get private messages successful", pagination);
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed getting detail user");
+        commonHelper.response(res, null, 500, "Failed getting private messages");
     }
 }
 
-const createUser = async (req, res) => {
+const createPrivateMessage = async (req, res) => {
     try {
-        //Get request user data and user title
+        // Get request private data and group title
         const data = req.body;
-        const title = data.title;
+        const id_user = req.payload.id;
 
-        //Check if user title already exists
-        const userTitleResult = await userModel.selectUserTitle(title);
-        if (userTitleResult.rowCount > 0) return commonHelper
-            .response(res, null, 403, "User title already exists");
+        // Check if requested data exists
+        if (!data.id_receiver || !data.message) return commonHelper
+            .response(res, null, 400, "Client must provide id receiver and message");
 
-        //Get user photo
-        if (req.file == undefined) return commonHelper
-            .response(res, null, 400, "Please input photo");
-        // const HOST = process.env.RAILWAY_STATIC_URL;
-        // data.photo = `http://${HOST}/img/${req.file.filename}`;
-        const uploadResult = await uploadPhoto(req.file)
-        const parentPath = process.env.GOOGLE_DRIVE_PHOTO_PATH;
-        data.photo = parentPath.concat(uploadResult.id)
+        // Check if receiver exists in database
+        const userResult = await userModel.findId(data.id_receiver);
+        if (!userResult.rowCount) return commonHelper.response(res, 404, null,
+            "User not found");
 
-        //Insert user to database
+        // Insert private message to database
         data.id = uuidv4();
-        data.id_user = req.payload.id;
-        data.created_at = Date.now();
-        data.updated_at = Date.now();
-        const result = await userModel.insertUser(data);
+        data.sender = id_user;
+        data.message_type = "text";
+        data.created_at = new Date(Date.now()).toISOString();
+        data.updated_at = data.created_at;
+        const result = await privateMessageModel.insertPrivateMessage(data);
 
-        //Response
-        commonHelper.response(res, [{ id: data.id }], 201, "User added");
+        // Response
+        commonHelper.response(res, result, 201, "Private message added");
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed adding user");
+        commonHelper.response(res, null, 500, "Failed adding private message");
     }
 }
 
-const updateUser = async (req, res) => {
+const updatePrivatepMessage = async (req, res) => {
     try {
-        //Get request user id, user id, and user data
+        // Get request group id and data
         const id = req.params.id;
         const id_user = req.payload.id;
         const data = req.body;
 
-        //Check if user exists in database
-        const userResult = await userModel.selectUser(id);
-        if (!userResult.rowCount)
-            return commonHelper.response(res, null, 404, "User not found");
+        // Check if private message exists in database
+        const privateMessageResult = await privateMessageModel
+            .selectPrivateMessage(id)
+        if (!privateMessageResult.rowCount) return commonHelper
+            .response(res, 404, null, "Private message not found");
 
-        //Check if user is created by user logged in
-        if (userResult.rows[0].id_user != id_user)
+        // Check if private message is created by user logged in
+        if (privateMessageResult.rows[0].sender != id_user)
             return commonHelper.response(res, null, 403,
-                "Updating user created by other user is not allowed");
+                "Updating private message created by other user is not allowed");
 
+        // Check if private message type is text
+        if (privateMessageResult.rows[0].message_type != "text")
+            return commonHelper.response(res, null, 403,
+                "Updating message type other than text is not allowed");
 
-        try {
-            const oldPhoto = userResult.rows[0].photo;
-            const oldPhotoId = oldPhoto.split("=")[1];
-            const updateResult = await updatePhoto(req.file, oldPhotoId)
-            const parentPath = process.env.GOOGLE_DRIVE_PHOTO_PATH;
-            data.photo = parentPath.concat(updateResult.id)
-        }
-        catch (err) {
-            data.photo = userResult.rows[0].photo
-        }
-        //Get user photo
-        // if (req.file == undefined) return commonHelper
-        //     .response(res, null, 400, "Please input photo");
-
-        //Update user in database
+        // Update private message in database
         data.id = id;
-        data.updated_at = Date.now();
-        const result = await userModel.updateUser(data);
+        data.updated_at = new Date(Date.now()).toISOString();
+        const result = await privateMessageModel.updatePrivateMessage(data);
 
         //Response
-        commonHelper.response(res, [{ id: data.id }], 201, "User updated");
+        commonHelper.response(res, result.rows, 201, "Private message updated");
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed updating user");
+        commonHelper.response(res, null, 500, "Failed updating private message");
     }
 }
 
-const deleteUser = async (req, res) => {
+const softDeletePrivateMessage = async (req, res) => {
     try {
-        //Get request user id
+        // Get request private meesage id and data
         const id = req.params.id;
         const id_user = req.payload.id;
 
-        //Check if user exists in database
-        const userResult = await userModel.selectUser(id);
-        if (!userResult.rowCount)
-            return commonHelper.response(res, null, 404,
-                "User not found or already deleted");
+        // Check if private message exists in database
+        const privateMessageResult = await privateMessageModel
+            .selectPrivateMessage(id)
+        if (!privateMessageResult.rowCount) return commonHelper
+            .response(res, 404, null, "Private message not found");
 
-        //Check if user is created by user logged in
-        if (userResult.rows[0].id_user != id_user)
+        // Check if private message is created by user logged in
+        if (privateMessageResult.rows[0].sender != id_user)
             return commonHelper.response(res, null, 403,
-                "Deleting user created by other user is not allowed");
+                "Deleting private message created by other user is not allowed");
 
-        
-        //Delete user
-        const result = await userModel.deleteUser(id);
-
-        const oldPhoto = userResult.rows[0].photo;
-        const oldPhotoId = oldPhoto.split("=")[1];
-        await deletePhoto(oldPhotoId)
+        // Delete group message in database
+        const deleted_at = new Date(Date.now()).toISOString();
+        const result = await privateMessageModel
+            .softDeletePrivateMessage(id, deleted_at);
 
         //Response
-        commonHelper.response(res, result.rows, 200, "User deleted");
+        commonHelper.response(res, result.rows, 200, "Private message deleted");
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed deleting user");
+        commonHelper.response(res, null, 500, "Failed deleting private message");
     }
 }
 
 module.exports = {
-    getAllUsers,
-    getDetailUser,
-    createUser,
-    updateUser,
-    deleteUser
+getAllPrivateMessages,
+getUserPrivateMessages,
+createPrivateMessage,
+updatePrivatepMessage,
+softDeletePrivateMessage
 }
