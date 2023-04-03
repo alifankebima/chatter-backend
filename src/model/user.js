@@ -66,6 +66,12 @@ const findUsername = (username) => {
             (error, result) => (!error) ? resolve(result) : reject(error)));
 }
 
+const updateUserPassword = (email, password) => {
+    return new Promise((resolve, reject) =>
+        pool.query(`UPDATE users SET password='${password}' WHERE email='${email}'`,
+            (error, result) => (!error) ? resolve(result) : reject(error)));
+}
+
 module.exports = {
     selectAllUsers,
     selectUser,
@@ -76,5 +82,6 @@ module.exports = {
     findId,
     findEmail,
     findEmailVerified,
-    findUsername
+    findUsername,
+    updateUserPassword
 }

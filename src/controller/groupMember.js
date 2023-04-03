@@ -71,7 +71,7 @@ const createGroupMember = async (req, res) => {
 
         // Check if requested data exists
         if (!data.id_group) return commonHelper
-            .response(res, null, 400, "Client must provide id group");
+            .response(res, null, 400, "User must provide id group");
 
         // Check if group exists
         const groupResult = await groupModel.findId(data.id_group);

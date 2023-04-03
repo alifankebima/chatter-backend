@@ -85,7 +85,7 @@ const createGroupMessage = async (req, res) => {
 
         // Check if requested data exists
         if (!id_group || !data.message) return commonHelper
-            .response(res, null, 400, "Client must provide id group and message");
+            .response(res, null, 400, "User must provide id group and message");
 
         // Check if group exists in database
         const groupResult = await groupModel.findId(id_group);

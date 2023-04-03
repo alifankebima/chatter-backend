@@ -69,7 +69,7 @@ const createGroup = async (req, res) => {
 
         // Check if requested data exists
         if (!data.name) return commonHelper.response(res, null, 400,
-            "Client must provide group name")
+            "User must provide group name")
 
         // Insert group to database
         data.id = uuidv4();

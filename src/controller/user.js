@@ -15,7 +15,7 @@ const registerUser = async (req, res) => {
         // Check if requested data exists
         if (!data.fullname || !data.username || !data.email || !data.password)
             return commonHelper.response(res, null, 400,
-                "Client must provide fullname, username, email, and password");
+                "User must provide fullname, username, email, and password");
 
         // TODO: resend verification email if user is registered but not verified
         // Check if email is already used
@@ -42,7 +42,7 @@ const registerUser = async (req, res) => {
             email: data.email
         }
         const token = authHelper.generateToken(payload);
-        email.sendMail(data.email, token);
+        email.sendMail(data.email, token, "Chatter app email verification");
 
         // Response
         commonHelper.response(res, result.rows, 201,
@@ -60,10 +60,10 @@ const resendVerificationEmail = async (req, res) => {
 
         // Check if requested data exists
         if (!data.email) return commonHelper.response(res, null, 400,
-            "Client must provide email");
+            "User must provide email");
 
         // Check if email is already verified
-        const result = await userModel.findEmailVerified(email);
+        const result = await userModel.findEmailVerified(data.email);
         if (result.rowCount) return commonHelper
             .response(res, null, 403, "Email is already verified");
 
@@ -72,7 +72,7 @@ const resendVerificationEmail = async (req, res) => {
             email: data.email
         }
         const token = authHelper.generateToken(payload);
-        email.sendMail(data.email, token);
+        email.sendMail(data.email, token, "Chatter app email verification");
 
         // Response
         commonHelper.response(res, result.rows, 200,
@@ -90,7 +90,7 @@ const verifyUserEmail = async (req, res) => {
 
         // Check if requested data exists
         if (!data.token) return commonHelper.response(res, null, 400,
-            "Client must provide token");
+            "User must provide token");
 
         // Decode token
         let decoded = jwt.verify(data.token, process.env.JWT_SECRETKEY);
@@ -122,6 +122,77 @@ const verifyUserEmail = async (req, res) => {
     }
 }
 
+const sendForgotPasswordLink = async (req, res) => {
+    try {
+        // Get request data
+        const data = req.body;
+        console.log(data)
+        // Check if requested data exists
+        if (!data.email) return commonHelper.response(res, null, 400,
+            "User must provide email");
+
+        // Check if email is verified
+        const result = await userModel.findEmailVerified(data.email);
+        if (!result.rowCount) return commonHelper
+            .response(res, null, 403, "Email isn't verified");
+
+        // Resend email verification link
+        const payload = {
+            email: data.email
+        }
+        const token = authHelper.generateToken(payload);
+        email.sendForgotPassword(data.email, token, "Chatter app forgot password link");
+
+        // Response
+        commonHelper.response(res, result.rows, 200,
+            "Forgot password link has been sent, please check your email");
+    } catch (error) {
+        console.log(error);
+        commonHelper.response(res, null, 500, "Failed sending verification email");
+    }
+}
+
+const resetUserPassword = async (req, res) => {
+    try {
+        // Get request data
+        let data = req.body;
+
+        // Check if requested data exists
+        if (!data.token) return commonHelper.response(res, null, 400,
+            "User must provide token");
+
+        // Decode token
+        let decoded = jwt.verify(data.token, process.env.JWT_SECRETKEY);
+
+        // Check if email is verified
+        const emailResult = await userModel.findEmailVerified(decoded.email);
+        if (!emailResult.rowCount) return commonHelper
+            .response(res, null, 403, "Email isn't verified");
+
+        // Reset user password
+        const salt = bcrypt.genSaltSync(10);
+        data.password = bcrypt.hashSync(data.password, salt);
+        const result = await userModel.updateUserPassword(decoded.email, data.password);
+
+        // Response
+        commonHelper.response(res, result.rows, 201,
+            "Reset password successful");
+    } catch (error) {
+        console.log(error);
+        switch (error.name) {
+            case "JsonWebTokenError":
+                commonHelper.response(res, null, 401, "Forgot password link invalid");
+                break;
+            case "TokenExpiredError":
+                commonHelper.response(res, null, 401, "Forgot password link expired");
+                break;
+            default:
+                commonHelper.response(res, null, 500, "Forgot password link not active");
+                break;
+        }
+    }
+}
+
 const LoginUser = async (req, res) => {
     try {
         // Get request login information
@@ -129,7 +200,7 @@ const LoginUser = async (req, res) => {
 
         // Check if requested data exists
         if (!data.email || !data.password) return commonHelper
-            .response(res, null, 400, "Client must provide email and password");
+            .response(res, null, 400, "User must provide email and password");
 
         // Check if email exists
         const { rows: [user], rowCount } = await userModel.findEmail(data.email);
@@ -353,6 +424,8 @@ module.exports = {
     registerUser,
     resendVerificationEmail,
     verifyUserEmail,
+    sendForgotPasswordLink,
+    resetUserPassword,
     LoginUser,
     getProfile,
     refreshToken,

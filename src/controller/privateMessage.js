@@ -53,7 +53,7 @@ const getReceiverPrivateMessages = async (req, res) => {
 
         // Check if requested data exists
         if (!id_sender) return commonHelper.response(res, null, 400,
-            "Client must provide id sender")
+            "User must provide id sender")
 
         // Get private messages from database
         const results = await privateMessageModel
@@ -90,7 +90,7 @@ const createPrivateMessage = async (req, res) => {
 
         // Check if requested data exists
         if (!data.receiver || !data.message) return commonHelper
-            .response(res, null, 400, "Client must provide id receiver and message");
+            .response(res, null, 400, "User must provide id receiver and message");
 
         // Check if receiver exists in database
         const userResult = await userModel.findId(data.receiver);
