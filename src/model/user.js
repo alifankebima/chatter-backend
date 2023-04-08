@@ -1,14 +1,16 @@
 const pool = require('../config/db');
 
 const selectAllUsers = (searchParam, sortBy, sort, limit, offset) => {
-    return pool.query(`SELECT * FROM users WHERE username ILIKE 
-        '%${searchParam}%' AND deleted_at IS null ORDER BY ${sortBy} 
-        ${sort} LIMIT ${limit} OFFSET ${offset}`);
+    return pool.query(`SELECT id, fullname, username, email, image, 
+        phone_number, created_at, updated_at, deleted_at FROM users 
+        WHERE username ILIKE '%${searchParam}%' AND deleted_at IS null 
+        ORDER BY ${sortBy} ${sort} LIMIT ${limit} OFFSET ${offset}`);
 }
 
 const selectUser = (id) => {
     return new Promise((resolve, reject) =>
-        pool.query(`SELECT * FROM users WHERE id='${id}'`,
+        pool.query(`SELECT id, fullname, username, email, image, phone_number, 
+            created_at, updated_at, deleted_at FROM users WHERE id='${id}'`,
             (error, result) => (!error) ? resolve(result) : reject(error)));
 }
 
