@@ -406,8 +406,10 @@ const deleteUser = async (req, res) => {
 
         // Delete user's image
         const oldPhoto = userResult.rows[0].image;
-        const oldPhotoId = oldPhoto.split("=")[1];
-        await googleDrive.deletePhoto(oldPhotoId);
+        if(oldPhoto != null){
+            const oldPhotoId = oldPhoto.split("=")[1];
+            await googleDrive.deletePhoto(oldPhotoId);
+        }
 
         // Delete user
         const result = await userModel.deleteUser(id_user);
