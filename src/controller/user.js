@@ -400,7 +400,7 @@ const deleteUser = async (req, res) => {
         const id_user = req.payload.id;
 
         // Check if user exists in database
-        const userResult = await userModel.findId(id_user);
+        const userResult = await userModel.selectUser(id_user);
         if (!userResult.rowCount) return commonHelper
             .response(res, null, 404, "User not found or already deleted");
 
