@@ -15,14 +15,14 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: ['http://localhost:3000']
+        origin: [`${process.env.NODEMAILER_FRONTEND_URL}`]
     }
 })
 
 // Implement API endpoints
 app.use(express.json());
 app.use(cors({
-    origin: ['http://localhost:3000']
+    origin: [`${process.env.NODEMAILER_FRONTEND_URL}`]
 }));
 app.use(morgan("dev"));
 app.use(helmet());
