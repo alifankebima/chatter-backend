@@ -1,0 +1,816 @@
+{
+	"info": {
+		"_postman_id": "9dece0eb-8d6f-419d-b22e-c295fde9d8ad",
+		"name": "Chatter",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26309865"
+	},
+	"item": [
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Authentication",
+					"item": [
+						{
+							"name": "Register user",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"fullname\" : \"bruh\",\n    \"username\" :\"keren2\",\n    \"email\" : \"nocturnalslyleaf@gmail.com\",\n    \"password\" : \"password123\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{API_URL}}/api/v1/user/register",
+									"host": [
+										"{{API_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"register"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Resend email verification",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\" : \"alif.anke.bima@gmail.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{localhost}}/api/v1/user/resend-email-verification",
+									"host": [
+										"{{localhost}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"resend-email-verification"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Verify email",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"token\" : \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5vY3R1cm5hbHNseWxlYWZAZ21haWwuY29tIiwiaWF0IjoxNjgwOTUzNTYwLCJleHAiOjE2ODA5NTcxNjAsImlzcyI6ImV4YW1wbGUifQ.lse2y2cgXHZ0EJaf5KvXfIN2fx_29qECCQ5fspTG_-8\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{API_URL}}/api/v1/user/verify-email",
+									"host": [
+										"{{API_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"verify-email"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Login",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\" : \"nocturnalslyleaf@gmail.com\",\n    \"password\" : \"password123\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{API_URL}}/api/v1/user/login",
+									"host": [
+										"{{API_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Refresh token",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"refreshToken\" : \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQzOTg3OTE1LTA3ZTItNDc4My1iZjBlLWFiNzU0YmI0NWEwYiIsImVtYWlsIjoiYWxpZi5hbmtlLmJpbWFAZ21haWwuY29tIiwidXNlcm5hbWUiOiJicmVhZHN0aWNrczY0IiwiaWF0IjoxNjgwMjQ5NDU4LCJleHAiOjE2ODAzMzU4NTh9.gWTUe39q-yleVaMdlIMlYt-ibaGe3Qgrx7ZkfhN-yvQ\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{localhost}}/api/v1/user/refresh-token",
+									"host": [
+										"{{localhost}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"refresh-token"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get all users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_URL}}/api/v1/user",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_URL}}/api/v1/user/profile",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get detail user",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/user/{{id_user}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"{{id_user}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update user",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "fullname",
+									"value": "Alif Baru",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "breadsticks",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "password123",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/home/alif/Dropbox/Pictures/Pokemon/braixen_litten_by_siraquakip-da2inqy.png"
+								},
+								{
+									"key": "phone_number",
+									"value": "085718516646",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{API_URL}}/api/v1/user",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete user",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{API_URL}}/api/v1/user",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Private message",
+			"item": [
+				{
+					"name": "Get all private messages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/private-message",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"private-message"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user private message",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/private-message/{{id_receiver}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"private-message",
+								"{{id_receiver}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send private message",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Waalaikumsalam\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{localhost}}/api/v1/private-message/{{id_receiver}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"private-message",
+								"{{id_receiver}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update private message",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Waalaikumsalam 2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{localhost}}/api/v1/private-message/message/{{id_private_message}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"private-message",
+								"message",
+								"{{id_private_message}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Soft delete private message",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/private-message/message/{{id_private_message}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"private-message",
+								"message",
+								"{{id_private_message}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Group",
+			"item": [
+				{
+					"name": "Get all groups",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/group",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get detail group",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/group",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create group",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\" : \"Pancaroba\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{localhost}}/api/v1/group",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update group",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "ICT",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/home/alif/Unduhan/account-background.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{localhost}}/api/v1/group/{{id_group}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group",
+								"{{id_group}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Soft delete group",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/group/{{id_group}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group",
+								"{{id_group}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Group member",
+			"item": [
+				{
+					"name": "Get all group members",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/group-member",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group-member"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get group members",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/group-member/{{id_group}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group-member",
+								"{{id_group}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Join group",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/group-member/{{id_group}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group-member",
+								"{{id_group}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Leave group",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/group-member/{{id_group}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group-member",
+								"{{id_group}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Group message",
+			"item": [
+				{
+					"name": "Get all group messages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/group-message",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group-message"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get group messages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/group-message/{{id_group}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group-message",
+								"{{id_group}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send group message",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Salam dari alif\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{localhost}}/api/v1/group-message/{{id_group}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group-message",
+								"{{id_group}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update group message",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"hello wooooooorld\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{localhost}}/api/v1/group-message/message/{{id_group_message}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group-message",
+								"message",
+								"{{id_group_message}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Soft delete group message",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{localhost}}/api/v1/group-message/message/{{id_group_message}}",
+							"host": [
+								"{{localhost}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"group-message",
+								"message",
+								"{{id_group_message}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImE5OWQzMDEyLWYzZDktNDE2YS1iNWIxLWI2NDdmY2M2ZmJlOCIsImVtYWlsIjoibm9jdHVybmFsc2x5bGVhZkBnbWFpbC5jb20iLCJ1c2VybmFtZSI6ImtlcmVuMiIsImlhdCI6MTY4MDk1MzY1MywiZXhwIjoxNjgwOTU3MjUzLCJpc3MiOiJleGFtcGxlIn0._C3HzeEG1TDu_S8yKfRAlJptyzymMqHV-AMOTxKbRr4",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "localhost",
+			"value": "http://localhost:4000"
+		},
+		{
+			"key": "id_user",
+			"value": "43987915-07e2-4783-bf0e-ab754bb45a0b"
+		},
+		{
+			"key": "id_group",
+			"value": "79b78b94-9e1b-4938-870f-dc431edd8d58"
+		},
+		{
+			"key": "id_group_member",
+			"value": "d6257740-ec33-4b3c-bbca-8bd7e44d93e0"
+		},
+		{
+			"key": "id_group_message",
+			"value": "1199c23c-6696-4ba5-a2d0-885f74120bb3"
+		},
+		{
+			"key": "id_receiver",
+			"value": "6fd1dbf4-aea0-4dec-bfea-b3c30f6da547"
+		},
+		{
+			"key": "id_private_message",
+			"value": "c5fe64e8-d99f-4b67-ab96-4ff2063dc7b9"
+		},
+		{
+			"key": "API_URL",
+			"value": "https://chatter-backend-production.up.railway.app",
+			"type": "string"
+		}
+	]
+}
