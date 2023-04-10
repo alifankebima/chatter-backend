@@ -91,4 +91,5 @@ app.use((err, req, res, next) => { // eslint-disable-line
 httpServer.listen(port, () => {
     console.log(`Server internal port: ${port}`);
     console.log(`Server url: ${process.env.RAILWAY_STATIC_URL}`)
+    console.log(`Frontend URL : ${process.env.NODEMAILER_FRONTEND_URL}`)
 });
