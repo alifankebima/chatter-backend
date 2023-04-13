@@ -37,19 +37,30 @@ app.all("*", (req, res, next) => {
 });
 
 // Realtime socket.io
-const users = {};
+let activeUsers = {}
+const updateActiveUsers = (activeUsers, user) => {
+    activeUsers[user.username] = user;
+}
+
 io.on('connection', (socket) => {
     console.log(`ada perangkat yang terhubung dengan id ${socket.id}`);
+    socket.on('setActiveUsers', ({username }) => {
+        updateActiveUsers(activeUsers, {id: socket.id, username})
+        console.log(activeUsers)
+        io.emit('getActiveUsers', activeUsers)
+    })
     socket.on('messageAll', ({ message, user }) => {
         const current = new Date();
         let time = current.toLocaleTimeString();
         console.log(user + " : " + message)
         io.emit('messageBE', { user, message, date: time })
     })
-    socket.on('messagePrivate', ({ message, id, user }) => {
+    socket.on('messagePrivate', ({ senderId, message, id, user }) => {
         const current = new Date();
         let time = current.toLocaleTimeString();
-        // socket.emit('messageBE', {user,message,date:time})
+        socket.emit('messageBE', {user,message,date:time})
+        console.log(id)
+        console.log(senderId)
         socket.to(id).emit('messageBE', { user, message, date: time })
     })
     socket.on('inisialRoom', ({ room, username }) => {
