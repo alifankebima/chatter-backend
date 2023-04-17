@@ -361,7 +361,7 @@ const updateUser = async (req, res) => {
             .response(res, null, 404, "User not found");
 
         // Update image if image already exists in database
-        if (req.file && oldUserResult.rows[0].image != null) {
+        if (req.file && oldUserResult.rows[0].image != "") {
             const oldImage = oldUserResult.rows[0].image;
             const oldImageId = oldImage.split("=")[1];
             const updateResult = await googleDrive.updateImage(req.file, oldImageId)
@@ -369,7 +369,7 @@ const updateUser = async (req, res) => {
             data.image = parentPath.concat(updateResult.id)
 
             // Upload image if image doesn't exists in database
-        } else if (req.file && oldUserResult.rows[0].image == null) {
+        } else if (req.file && oldUserResult.rows[0].image == "") {
             const uploadResult = await googleDrive.uploadImage(req.file)
             const parentPath = process.env.GOOGLE_DRIVE_PHOTO_PATH;
             data.image = parentPath.concat(uploadResult.id)
@@ -386,8 +386,11 @@ const updateUser = async (req, res) => {
         data.updated_at = new Date(Date.now()).toISOString();
         const result = await userModel.updateUser(data);
 
+        // Get user data after update
+        const result2 = await userModel.selectUser(id_user)
+
         // Response
-        commonHelper.response(res, result.rows, 201, "User updated");
+        commonHelper.response(res, result2.rows, 201, "User updated");
     } catch (error) {
         console.log(error);
         commonHelper.response(res, null, 500, "Failed updating user");
@@ -408,7 +411,7 @@ const deleteUser = async (req, res) => {
         const oldPhoto = userResult.rows[0].image;
         if(oldPhoto != null){
             const oldPhotoId = oldPhoto.split("=")[1];
-            await googleDrive.deletePhoto(oldPhotoId);
+            await googleDrive.deleteImage(oldPhotoId);
         }
 
         // Delete user
@@ -419,6 +422,32 @@ const deleteUser = async (req, res) => {
     } catch (error) {
         console.log(error);
         commonHelper.response(res, null, 500, "Failed deleting user");
+    }
+}
+
+const deleteProfilePicture = async (req, res) => {
+    try {
+        // Get request user id
+        const id_user = req.payload.id;
+
+        // Check if user exists in database
+        const userResult = await userModel.selectUser(id_user);
+        if (!userResult.rowCount) return commonHelper
+            .response(res, null, 404, "User not found or already deleted");
+
+        // Delete user's image
+        const oldPhoto = userResult.rows[0].image;
+        if(oldPhoto != null){
+            const oldPhotoId = oldPhoto.split("=")[1];
+            await googleDrive.deleteImage(oldPhotoId);
+            await userModel.deleteProfilePicture(id_user)
+        }
+
+        // Response
+        commonHelper.response(res, null, 200, "Profile picture deleted");
+    } catch (error) {
+        console.log(error);
+        commonHelper.response(res, null, 500, "Failed deleting rofile picture");
     }
 }
 
@@ -434,5 +463,6 @@ module.exports = {
     getAllUsers,
     getDetailUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    deleteProfilePicture
 }

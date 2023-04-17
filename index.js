@@ -11,6 +11,8 @@ const xss = require("xss-clean");
 
 const app = express();
 
+const privateMessageModel = require('./src/model/privateMessage')
+
 // Implement Socket.io
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -37,51 +39,52 @@ app.all("*", (req, res, next) => {
 });
 
 // Realtime socket.io
-let activeUsers = {}
+const activeUsers = {}
+const activeSocketId = {}
 const updateActiveUsers = (activeUsers, user) => {
     activeUsers[user.username] = user;
+    activeSocketId[user.id_socket] = user;
 }
 
 io.on('connection', (socket) => {
-    console.log(`ada perangkat yang terhubung dengan id ${socket.id}`);
-    socket.on('setActiveUsers', ({username }) => {
-        updateActiveUsers(activeUsers, {id: socket.id, username})
+    console.log(`Device connected with id : ${socket.id}`);
+    socket.on('setActiveUsers', ({ username }) => {
+        updateActiveUsers(activeUsers, { id_socket: socket.id, username })
         console.log(activeUsers)
         io.emit('getActiveUsers', activeUsers)
     })
     socket.on('messageAll', ({ message, user }) => {
-        const current = new Date();
-        let time = current.toLocaleTimeString();
+        const created_at = new Date(Date.now()).toISOString();
         console.log(user + " : " + message)
-        io.emit('messageBE', { user, message, date: time })
+        io.emit('messageBE', { user, message, created_at })
     })
-    socket.on('messagePrivate', ({ senderId, message, id, user }) => {
-        const current = new Date();
-        let time = current.toLocaleTimeString();
-        socket.emit('messageBE', {user,message,date:time})
-        console.log(id)
-        console.log(senderId)
-        socket.to(id).emit('messageBE', { user, message, date: time })
-    })
-    socket.on('inisialRoom', ({ room, username }) => {
-        console.log(room);
-        socket.join(room)
-        // const current = new Date();
-        // let time = current.toLocaleTimeString();
-        // socket.broadcast.to(room).emit('notifAdmin', {
-        //     sender:"Admin",
-        //     message:`${username} selamat bergabung`,
-        //     date:time
-        // })
+
+    socket.on('messagePrivate', ({ receiverUsername, sender_username, message, sender_image }) => {
+        const created_at = new Date(Date.now()).toISOString();
+        console.log({ receiverUsername, sender_username, message, sender_image })
+        if (activeUsers[receiverUsername]) {
+            const receiverId = activeUsers[receiverUsername].id_socket;
+            console.log("receiver id : "+ receiverId)
+            socket.to(receiverId).emit('messageBE', { sender_username, receiverUsername, message, created_at, sender_image })
+        }
+        socket.emit('messageBE', { sender_username, receiverUsername, message, created_at, sender_image })
     })
     socket.on('sendMessage', ({ sender, message, room }) => {
         console.log(sender, message, room);
-        const current = new Date();
-        let time = current.toLocaleTimeString();
-        io.to(room).emit('newMessage', { sender, message, date: time })
+        const created_at = new Date(Date.now()).toISOString();
+        io.to(room).emit('newMessage', { sender, message, created_at })
     })
     socket.on('disconnect', () => {
-        console.log(`ada perangkat yang terputus dengan id ${socket.id}`);
+        console.log(`Device disconnected with socket id : ${socket.id}`);
+        if (!activeSocketId[socket.id]) return;
+
+        if (activeSocketId[socket.id].id_socket == socket.id) {
+            console.log(`${activeSocketId[socket.id].username} has been deleted`)
+            delete activeUsers[activeSocketId[socket.id].username]
+            delete activeSocketId[socket.id]
+        }
+        console.log(activeUsers);
+        io.emit('getActiveUsers', activeUsers)
     })
 },
     []

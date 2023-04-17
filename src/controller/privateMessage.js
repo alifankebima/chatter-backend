@@ -44,7 +44,7 @@ const getReceiverPrivateMessages = async (req, res) => {
         // Get request id sender, id receiver, and pagination query
         const id_sender = req.payload.id;
         const id_receiver = req.params.id_receiver;
-        const limit = Number(req.query.limit) || 10;
+        const limit = Number(req.query.limit) || 50;
         const page = Number(req.query.page) || 1;
         const offset = (page - 1) * limit;
 
@@ -74,10 +74,44 @@ const getReceiverPrivateMessages = async (req, res) => {
 
         // Response
         commonHelper.response(res, results.rows, 200,
-            "Get private messages successful", pagination);
+            "Get user private messages successful", pagination);
     } catch (error) {
         console.log(error);
-        commonHelper.response(res, null, 500, "Failed getting private messages");
+        commonHelper.response(res, null, 500, "Failed getting user private messages");
+    }
+}
+
+const getUserPrivateMessageList = async (req, res) => {
+    try {
+        // Get request id sender, id receiver, and pagination query
+        const id_user = req.payload.id;
+        const limit = Number(req.query.limit) || 50;
+        const page = Number(req.query.page) || 1;
+        const offset = (page - 1) * limit;
+
+        // Get private messages from database
+        const results = await privateMessageModel
+            .selectReceiverPrivateMessageList(id_user, limit, offset)
+
+        // Return not found if there's no group messages in database
+        if (!results.rowCount) return commonHelper
+            .response(res, null, 404, "Private message list not found");
+
+        // Pagination info
+        const totalData = results.rowCount;
+        const totalPage = Math.ceil(totalData / limit);
+        const pagination = { currentPage: page, limit, totalData, totalPage };
+
+        // Return page invalid if page params is more than total page
+        if (page > totalPage) return commonHelper
+            .response(res, null, 404, "Page invalid", pagination);
+
+        // Response
+        commonHelper.response(res, results.rows, 200,
+            "Get user private message list successful", pagination);
+    } catch (error) {
+        console.log(error);
+        commonHelper.response(res, null, 500, "Failed getting user private message list");
     }
 }
 
@@ -182,6 +216,7 @@ const softDeletePrivateMessage = async (req, res) => {
 module.exports = {
     getAllPrivateMessages,
     getReceiverPrivateMessages,
+    getUserPrivateMessageList,
     createPrivateMessage,
     updatePrivatepMessage,
     softDeletePrivateMessage

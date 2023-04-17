@@ -21,5 +21,6 @@ router.get("/", userController.getAllUsers);
 router.get("/:id", userController.getDetailUser);
 router.put("/", authMiddleware.protect, upload.single("image"), userController.updateUser);
 router.delete("/", authMiddleware.protect, userController.deleteUser);
+router.delete("/profile-picture", authMiddleware.protect, userController.deleteProfilePicture);
 
 module.exports = router;

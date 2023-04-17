@@ -35,6 +35,10 @@ const updateUser = (data) => {
         updated_at='${updated_at}' WHERE id='${id}'`);
 }
 
+const deleteProfilePicture = (id) => {
+    return pool.query(`UPDATE users SET image='' WHERE id='${id}'`);
+}
+
 const deleteUser = (id) => {
     return pool.query(`DELETE FROM users WHERE id='${id}'`);
 }
@@ -85,5 +89,6 @@ module.exports = {
     findEmail,
     findEmailVerified,
     findUsername,
-    updateUserPassword
+    updateUserPassword,
+    deleteProfilePicture
 }
