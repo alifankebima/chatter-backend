@@ -12,6 +12,7 @@ const xss = require("xss-clean");
 const app = express();
 
 const privateMessageModel = require('./src/model/privateMessage')
+const { v4: uuidv4 } = require('uuid');
 
 // Implement Socket.io
 const httpServer = createServer(app);
@@ -59,12 +60,27 @@ io.on('connection', (socket) => {
         io.emit('messageBE', { user, message, created_at })
     })
 
-    socket.on('messagePrivate', ({ receiverUsername, sender_username, message, sender_image }) => {
+    socket.on('messagePrivate', ({ receiverUsername, sender_username, message, sender_image, id_sender, id_receiver }) => {
         const created_at = new Date(Date.now()).toISOString();
         console.log({ receiverUsername, sender_username, message, sender_image })
+
+        const data = {};
+            data.id = uuidv4();
+            data.sender = id_sender;
+            data.receiver = id_receiver;
+            data.message = message;
+            data.message_type= "text"
+            data.created_at = created_at;
+            data.updated_at = created_at;
+
+            privateMessageModel.insertPrivateMessage(data).then((result)=>{
+                console.log("message added")
+            }).catch((error) => console.log(error));
+
         if (activeUsers[receiverUsername]) {
             const receiverId = activeUsers[receiverUsername].id_socket;
             console.log("receiver id : "+ receiverId)
+
             socket.to(receiverId).emit('messageBE', { sender_username, receiverUsername, message, created_at, sender_image })
         }
         socket.emit('messageBE', { sender_username, receiverUsername, message, created_at, sender_image })
