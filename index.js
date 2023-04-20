@@ -82,11 +82,6 @@ io.on('connection', (socket) => {
             console.log("receiver id : "+ receiverId)
 
             socket.to(receiverId).emit('messageBE', { sender_username, receiver_username, message, created_at, sender_image })
-
-            // privateMessageModel.selectReceiverPrivateMessageList(id_sender, "20", "0").then((result)=>{
-            //     socket.to(receiverId).emit('updatePrivateMessageList', (result.rows))
-            //     socket.emit('updatePrivateMessageList', (result.rows))
-            // }).catch((error) => console.log(error));
         }
         socket.emit('messageBE', { sender_username, receiver_username, message, created_at, sender_image })
     })
