@@ -60,9 +60,9 @@ io.on('connection', (socket) => {
         io.emit('messageBE', { user, message, created_at })
     })
 
-    socket.on('messagePrivate', ({ receiverUsername, sender_username, message, sender_image, id_sender, id_receiver }) => {
+    socket.on('messagePrivate', ({ receiver_username, sender_username, message, sender_image, id_sender, id_receiver }) => {
         const created_at = new Date(Date.now()).toISOString();
-        console.log({ receiverUsername, sender_username, message, sender_image })
+        console.log({ receiver_username, sender_username, message, sender_image })
 
         const data = {};
             data.id = uuidv4();
@@ -73,17 +73,22 @@ io.on('connection', (socket) => {
             data.created_at = created_at;
             data.updated_at = created_at;
 
-            privateMessageModel.insertPrivateMessage(data).then((result)=>{
+            privateMessageModel.insertPrivateMessage(data).then(()=>{
                 console.log("message added")
             }).catch((error) => console.log(error));
 
-        if (activeUsers[receiverUsername]) {
-            const receiverId = activeUsers[receiverUsername].id_socket;
+        if (activeUsers[receiver_username]) {
+            const receiverId = activeUsers[receiver_username].id_socket;
             console.log("receiver id : "+ receiverId)
 
-            socket.to(receiverId).emit('messageBE', { sender_username, receiverUsername, message, created_at, sender_image })
+            socket.to(receiverId).emit('messageBE', { sender_username, receiver_username, message, created_at, sender_image })
+
+            // privateMessageModel.selectReceiverPrivateMessageList(id_sender, "20", "0").then((result)=>{
+            //     socket.to(receiverId).emit('updatePrivateMessageList', (result.rows))
+            //     socket.emit('updatePrivateMessageList', (result.rows))
+            // }).catch((error) => console.log(error));
         }
-        socket.emit('messageBE', { sender_username, receiverUsername, message, created_at, sender_image })
+        socket.emit('messageBE', { sender_username, receiver_username, message, created_at, sender_image })
     })
     socket.on('sendMessage', ({ sender, message, room }) => {
         console.log(sender, message, room);

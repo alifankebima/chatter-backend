@@ -1,65 +1,37 @@
 const pool = require('../config/db');
 
-const selectAllPrivateMessages = (searchParam, sortBy, sort, limit, offset) => {
+const selectAllPrivateMessages = (searchParam, sortBy, sort, LIMIT, offset) => {
     return pool.query(`SELECT * FROM private_messages WHERE message ILIKE 
-        '%${searchParam}%' ORDER BY ${sortBy} ${sort} LIMIT ${limit} OFFSET 
+        '%${searchParam}%' ORDER BY ${sortBy} ${sort} LIMIT ${LIMIT} OFFSET 
         ${offset}`);
 }
 
-const selectUserPrivateMessages = (sender, receiver, limit, offset) => {
+const selectUserPrivateMessages = (sender, receiver, LIMIT, offset) => {
     // return pool.query(`SELECT * FROM private_messages WHERE sender='${sender}' 
     //     OR receiver='${receiver}' AND sender='${receiver}' OR 
-    //     receiver='${sender}' ORDER BY created_at DESC LIMIT ${limit} 
+    //     receiver='${sender}' ORDER BY created_at DESC LIMIT ${LIMIT} 
     //     OFFSET ${offset}`);
-    return pool.query(`SELECT pm.sender, u1.username as sender_username, 
-        u1.fullname as sender_fullname, u1.image as sender_image, pm.receiver, 
-        u2.username as receiver_username, u2.fullname as receiver_fullname, 
-        u2.image as receiver_image, pm.message, pm.message_type, pm.created_at, pm.updated_at, pm.deleted_at FROM private_messages as pm INNER JOIN  
-        users as u1 on u1.id = pm.sender INNER JOIN users as u2 on 
+    return pool.query(`SELECT pm.sender, u1.username AS sender_username, 
+        u1.fullname AS sender_fullname, u1.image AS sender_image, pm.receiver, 
+        u2.username AS receiver_username, u2.fullname AS receiver_fullname, 
+        u2.image AS receiver_image, pm.message, pm.message_type, pm.created_at, pm.updated_at, pm.deleted_at FROM private_messages AS pm INNER JOIN  
+        users AS u1 on u1.id = pm.sender INNER JOIN users AS u2 on 
         u2.id = pm.receiver WHERE pm.sender='${sender}' OR pm.receiver='${receiver}' AND pm.sender='${receiver}' OR pm.receiver='${sender}' 
-        ORDER BY pm.created_at ASC LIMIT ${limit} OFFSET ${offset}`);
+        ORDER BY pm.created_at ASC LIMIT ${LIMIT} OFFSET ${offset}`);
 }
 
-// const selectReceiverPrivateMessageList = (user, limit, offset) => {
-//     return pool.query(`SELECT pm.sender as pm_sender, private_messages.receiver as pm_receiver 
-//         FROM private_messages AS pm INNER JOIN users AS user1 ON user1.id = private_messages.receiver 
-//         inner join users AS user2 on user2.id = private_messages.sender 
-//         LIMIT ${limit} OFFSET ${offset}`);
-// }
-
-// const selectReceiverPrivateMessageList = (user, limit, offset) => {
-//     return pool.query(`SELECT DISTINCT private_messages.sender, 
-//         private_messages.receiver FROM private_messages WHERE private_messages.receiver='${user}' 
-//         OR private_messages.sender='${user}' LIMIT ${limit} OFFSET ${offset}`);
-// }
-
-const selectReceiverPrivateMessageList = (user, limit, offset) => {
-    return pool.query(`SELECT DISTINCT pm.sender, u1.username as sender_username, 
-        u1.fullname as sender_fullname, u1.image as sender_image, pm.receiver, 
-        u2.username as receiver_username, u2.fullname as receiver_fullname, 
-        u2.image as receiver_image FROM private_messages as pm INNER JOIN  
-        users as u1 on u1.id = pm.sender INNER JOIN users as u2 on 
-        u2.id = pm.receiver WHERE pm.sender='${user}' OR pm.receiver='${user}'
-        LIMIT ${limit} OFFSET ${offset}`);
+const selectReceiverPrivateMessageList = (user, LIMIT, offset) => {
+    return pool.query(`SELECT DISTINCT pm.sender, u1.username AS sender_username, 
+        u1.fullname AS sender_fullname, u1.image AS sender_image, pm.receiver, 
+        u2.username AS receiver_username, u2.fullname AS receiver_fullname, 
+        u2.image AS receiver_image, (SELECT created_at FROM private_messages 
+        WHERE sender='${user}' OR receiver='${user}' ORDER BY created_at DESC 
+        LIMIT 1), (SELECT message FROM private_messages WHERE sender='${user}' 
+        OR receiver='${user}' ORDER BY created_at DESC LIMIT 1) FROM 
+        private_messages AS pm INNER JOIN  users AS u1 on u1.id = pm.sender 
+        INNER JOIN users AS u2 on u2.id = pm.receiver WHERE pm.sender='${user}' or pm.receiver='${user}'
+        LIMIT ${LIMIT} OFFSET ${offset}`);
 }
-
-// const selectReceiverPrivateMessageList = (user, limit, offset) => {
-//     return pool.query(`SELECT DISTINCT private_messages.sender AS id,
-//         users.fullname, users.username, users.email, users.image, 
-//         users.phone_number FROM (SELECT * FROM private_messages ORDER BY created_at DESC) 
-//         AS private_messages INNER JOIN users ON private_messages.sender = users.id WHERE 
-//         private_messages.receiver='${user}' OR private_messages.sender='${user}' 
-//         LIMIT ${limit} OFFSET ${offset}`);
-// }
-
-// const selectSenderPrivateMessageList = (user, limit, offset) => {
-//     return pool.query(`SELECT DISTINCT private_messages.receiver AS id,
-//         users.fullname, users.username, users.email, users.image, 
-//         users.phone_number FROM (SELECT * FROM private_messages ORDER BY created_at DESC) 
-//         AS private_messages INNER JOIN users ON private_messages.receiver = users.id WHERE 
-//         private_messages.sender='${user}' OR 
-//         LIMIT ${limit} OFFSET ${offset}`);
-// }
 
 const selectPrivateMessage = (id) => {
     return new Promise((resolve, reject) =>

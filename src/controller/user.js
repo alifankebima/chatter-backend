@@ -384,7 +384,7 @@ const updateUser = async (req, res) => {
         // Update user in database
         data.id = id_user;
         data.updated_at = new Date(Date.now()).toISOString();
-        const result = await userModel.updateUser(data);
+        await userModel.updateUser(data);
 
         // Get user data after update
         const result2 = await userModel.selectUser(id_user)
