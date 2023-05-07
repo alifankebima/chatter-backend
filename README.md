@@ -26,7 +26,7 @@
 
 # About The Project
 
-Chatter is a website for communicating online and in real time, users can create account, change profile, and communicate with others in text form, besides that users can create groups to communicate with several people simultaneously.
+Chatter is a website for communicating online and in real time. Users can create account, change profile, and communicate with others in text form.
 
 ## Built With
 
